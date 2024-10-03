@@ -2,6 +2,9 @@ package xyz.regulad.partnerportal
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.realtime.Realtime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,5 +20,15 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
     fun updateConnectingStatus(newStatus: String) {
         _connectingStatus.value = newStatus
+    }
+
+    fun getSupabase() {
+        createSupabaseClient(
+            supabaseUrl = preferences.supabaseUrl,
+            supabaseKey = preferences.supabaseAnonKey
+        ) {
+            install(Postgrest)
+            install(Realtime)
+        }
     }
 }

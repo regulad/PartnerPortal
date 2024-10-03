@@ -74,4 +74,9 @@ dependencies {
     implementation("io.coil-kt:coil-gif:2.4.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:realtime-kt:3.0.0")
+    implementation("io.ktor:ktor-client-android:2.3.12")
 }
