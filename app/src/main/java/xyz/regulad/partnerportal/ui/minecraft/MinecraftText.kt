@@ -6,12 +6,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -26,51 +26,47 @@ import xyz.regulad.partnerportal.R
 val minecraftFontId: Int = R.font.minecraftia
 const val minecraftPixelHeight = 8 // height in "minecraft pixels" of the font
 
+val minecraftShadowColor = Color(0xFF3F3F3F)
+
 val minecraftFontFamily = FontFamily(
     Font(minecraftFontId, FontWeight.Normal)
 )
 
 @Composable
+fun TextStyleForFontSize(fontSize: TextUnit, textColor: Color = Color.White): TextStyle {
+    with (LocalDensity.current) {
+        val minecraftFontOffsetTextSize = fontSize / minecraftPixelHeight
+        val minecraftFontOffset = Offset(minecraftFontOffsetTextSize.toPx(), minecraftFontOffsetTextSize.toPx())
+
+        return TextStyle(
+            color = textColor,
+            fontSize = fontSize,
+            fontFamily = minecraftFontFamily,
+            shadow = Shadow(
+                color = minecraftShadowColor,
+                offset = minecraftFontOffset,
+                blurRadius = 0.1f // just needs to be non-zero; broken at 0 shadow
+            ),
+            lineHeight = fontSize * 1.25f
+        )
+    }
+}
+
+@Composable
 fun MinecraftText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = Color.White,
     fontSize: TextUnit = 16.sp,
-    shadowColor: Color = Color(0xFF3F3F3F),
-    style: TextStyle = TextStyle.Default,
-    lineHeight: TextUnit = fontSize * 1.25f,
+    color: Color = Color.White,
     onTextLayout: (TextLayoutResult) -> Unit = {}
 ) {
-    val context = LocalContext.current
+    val textStyle = TextStyleForFontSize(fontSize, color)
 
     Text(
         text = text,
-        color = color,
-        fontSize = fontSize,
-        fontFamily = minecraftFontFamily,
-        style = style,
-        lineHeight = lineHeight,
+        modifier = modifier,
+        style = textStyle,
         onTextLayout = onTextLayout,
-        modifier = modifier.drawBehind {
-            drawIntoCanvas { canvas ->
-                val paint = Paint().asFrameworkPaint().apply {
-                    this.color = shadowColor.toArgb()
-                    this.textSize = fontSize.toPx()
-                    typeface = ResourcesCompat.getFont(context, minecraftFontId)!!
-                }
-
-                text.split("\n").forEachIndexed { index, line ->
-                    val indexOffset = index * lineHeight.toPx()
-
-                    canvas.nativeCanvas.drawText(
-                        line,
-                        (fontSize / minecraftPixelHeight).toPx(),
-                        (2 * fontSize.toPx()) - (fontSize / minecraftPixelHeight).toPx() + indexOffset,
-                        paint
-                    )
-                }
-            }
-        }
     )
 }
 

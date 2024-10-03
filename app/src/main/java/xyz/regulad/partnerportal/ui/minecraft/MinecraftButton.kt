@@ -7,7 +7,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,6 +24,8 @@ val buttonBackgroundColor = Color(0xFF8c8c8c)
 val defaultTextColor = Color.White
 val selectedTextColor = Color(0xFFffffa0)
 val selectedButtonColor = Color(0xFF7d87be)
+
+val buttonBorderColor = Color.Black
 
 @Composable
 fun TextUnit.toDp(): Dp {
@@ -67,8 +68,9 @@ fun MinecraftButton(
     ) {
         Box(
             modifier = modifier
-                .border(2.dp, Color.Black)
+                .border(2.dp, buttonBorderColor)
                 .background(backgroundBrush)
+                // so dumb: shadow is factored into the inside and doesn't draw under padding
                 .padding(leftRightPadding, topBottomPadding, leftRightPadding- minecraftFontOffset.toDp(), topBottomPadding- minecraftFontOffset.toDp()),
         ) {
             MinecraftText(

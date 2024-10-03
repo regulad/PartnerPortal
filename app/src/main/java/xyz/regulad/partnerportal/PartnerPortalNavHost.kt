@@ -18,15 +18,19 @@ data object StartupRoute
 @Composable
 fun PartnerPortalNavHost(
     modifier: Modifier = Modifier,
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    viewModel: PartnerPortalViewModel
 ) {
     NavHost(navController = navHostController, startDestination = StartupRoute, modifier = modifier) {
         composable<StartupRoute> {
-            StartupPage(navController = navHostController)
+            StartupPage(
+                navController = navHostController,
+                viewModel = viewModel
+            )
         }
 
         composable<LoadingRoute> {
-            LoadingPage()
+            LoadingPage(viewModel = viewModel)
         }
     }
 }

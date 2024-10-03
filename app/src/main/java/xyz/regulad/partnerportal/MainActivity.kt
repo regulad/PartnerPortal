@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // force landscape
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
 
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -32,7 +32,8 @@ class MainActivity : ComponentActivity() {
                 ImmersiveFullscreenContent {
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // we don't use the padding here
                         PartnerPortalNavHost(
-                            navHostController = navController
+                            navHostController = navController,
+                            viewModel = viewModel
                         )
                     }
                 }

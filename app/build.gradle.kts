@@ -65,6 +65,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.navigation.compose)
 
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     implementation("io.coil-kt:coil:2.4.0")
