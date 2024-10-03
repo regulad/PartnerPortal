@@ -1,8 +1,10 @@
 package xyz.regulad.partnerportal.util
 
 import android.app.Activity
+import android.content.Context
 import android.graphics.Typeface
 import android.view.View
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -49,4 +51,8 @@ fun ImmersiveFullscreenContent(content: @Composable () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         content()
     }
+}
+
+fun Context.showToast(message: String) {
+    Toast.makeText(this@showToast, message, Toast.LENGTH_LONG).show()
 }

@@ -6,13 +6,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import xyz.regulad.partnerportal.HandledAsyncImage
-import xyz.regulad.partnerportal.MinecraftBackgroundImage
-import xyz.regulad.partnerportal.MinecraftText
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import xyz.regulad.partnerportal.LoadingRoute
+import xyz.regulad.partnerportal.ui.minecraft.HandledAsyncImage
+import xyz.regulad.partnerportal.ui.minecraft.MinecraftBackgroundImage
+import xyz.regulad.partnerportal.ui.minecraft.MinecraftButton
+import xyz.regulad.partnerportal.ui.minecraft.MinecraftText
 
-@Preview
 @Composable
-fun StartupPage(modifier: Modifier = Modifier) {
+fun StartupPage(modifier: Modifier = Modifier, navController: NavController) {
     MinecraftBackgroundImage("dirt.png")
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -32,27 +36,48 @@ fun StartupPage(modifier: Modifier = Modifier) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        MinecraftText("Enter configuration below:")
+                        MinecraftText("Configuration")
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        MinecraftText("Supabase Server URL:")
+                        MinecraftText(
+                            "Supabase Server URL:",
+                            fontSize = 10.sp
+                        )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        MinecraftText("Supabase Server Anon Key:")
+                        MinecraftText(
+                            "Supabase Server Anon Key:",
+                            fontSize = 10.sp
+                        )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        MinecraftText("Room Code:")
+                        MinecraftText(
+                            "Room Code:",
+                            fontSize = 10.sp
+                        )
                     }
 
                     Column {
-                        MinecraftText("Connect")
+                        MinecraftButton("Connect") {
+                            navController.navigate(LoadingRoute)
+                        }
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        MinecraftText(
+                            "Settings will be saved when\na connection is attempted.",
+                            fontSize = 10.sp
+                        )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        MinecraftText("Connect at Startup")
+                        MinecraftText(
+                            "Connect at Startup",
+                            fontSize = 10.sp
+                        )
                     }
                 }
             }

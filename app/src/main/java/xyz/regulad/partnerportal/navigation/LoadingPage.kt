@@ -6,8 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import xyz.regulad.partnerportal.MinecraftBackgroundImage
-import xyz.regulad.partnerportal.MinecraftText
+import xyz.regulad.partnerportal.ui.minecraft.MinecraftBackgroundImage
+import xyz.regulad.partnerportal.ui.minecraft.MinecraftText
 
 
 @Preview

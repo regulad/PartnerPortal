@@ -7,15 +7,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.rememberNavController
 import xyz.regulad.partnerportal.ui.theme.PartnerPortalTheme
 import xyz.regulad.partnerportal.util.ImmersiveFullscreenContent
@@ -39,7 +32,7 @@ class MainActivity : ComponentActivity() {
                 ImmersiveFullscreenContent {
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // we don't use the padding here
                         PartnerPortalNavHost(
-                            navController = navController
+                            navHostController = navController
                         )
                     }
                 }
