@@ -4,16 +4,45 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import xyz.regulad.blueheaven.util.DialogManager.showDialog
+import xyz.regulad.blueheaven.util.launchAppInfoSettings
 import xyz.regulad.partnerportal.LoadingRoute
+import xyz.regulad.partnerportal.MainActivity
 import xyz.regulad.partnerportal.PartnerPortalViewModel
 import xyz.regulad.partnerportal.ui.minecraft.*
+import xyz.regulad.partnerportal.util.showToast
 
+val VIDEO_CALL_PERMISSIONS = listOf(
+    android.Manifest.permission.CAMERA,
+    android.Manifest.permission.RECORD_AUDIO
+)
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel, navController: NavController) {
+    val activity = (LocalContext.current as? MainActivity)!!
+
     MinecraftBackgroundImage("dirt.png")
+
+    fun doConnect() {
+        navController.navigate(LoadingRoute)
+    }
+
+    val permissionState =
+        rememberMultiplePermissionsState(
+            permissions = VIDEO_CALL_PERMISSIONS,
+            onPermissionsResult = { permissions ->
+                if (permissions.all { it.value }) {
+                    doConnect()
+                }
+            }
+        )
 
     var supabaseUrl by remember { mutableStateOf(viewModel.preferences.supabaseUrl) }
     var supabaseAnonKey by remember { mutableStateOf(viewModel.preferences.supabaseAnonKey) }
@@ -38,19 +67,25 @@ fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel
                 ) {
                     Column {
                         MinecraftText(
+                            "See GitHub README.md to setup a custom server,\nor just use the default.",
+                            fontSize = 12.5.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        MinecraftText(
                             "Supabase Server URL:",
                             fontSize = 10.sp
                         )
 
                         Spacer(modifier = Modifier.height(5.dp))
 
-
                         MinecraftTextField(
                             supabaseUrl,
                             onValueChange = {
                                 supabaseUrl = it
                             },
-                            modifier = Modifier.width(350.dp)
+                            modifier = Modifier.width(400.dp)
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -67,7 +102,7 @@ fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel
                             onValueChange = {
                                 supabaseAnonKey = it
                             },
-                            modifier = Modifier.width(350.dp)
+                            modifier = Modifier.width(400.dp)
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -84,14 +119,7 @@ fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel
                             onValueChange = {
                                 roomCode = it
                             },
-                            modifier = Modifier.width(350.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        MinecraftText(
-                            "See GitHub README.md on setting up a Supabase server.",
-                            fontSize = 10.sp
+                            modifier = Modifier.width(400.dp)
                         )
                     }
 
@@ -100,9 +128,46 @@ fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel
                             viewModel.preferences.supabaseUrl = supabaseUrl
                             viewModel.preferences.supabaseAnonKey = supabaseAnonKey
                             viewModel.preferences.roomCode = roomCode
-                            
-                            // save done, now navigate
-                            navController.navigate(LoadingRoute)
+
+                            if (roomCode.isEmpty()) {
+                                activity.showToast("Room code cannot be empty. Choose one! Try to be unique.")
+                                return@MinecraftButton
+                            }
+
+                            if (supabaseUrl.isEmpty()) {
+                                activity.showToast("Supabase URL cannot be empty. Please enter a valid URL.")
+                                return@MinecraftButton
+                            }
+
+                            if (supabaseAnonKey.isEmpty()) {
+                                activity.showToast("Supabase Anon Key cannot be empty. Please enter a valid key.")
+                                return@MinecraftButton
+                            }
+
+                            if (permissionState.allPermissionsGranted) {
+                                doConnect()
+                                return@MinecraftButton
+                            }
+
+                            // we don't have camera/mic permissions, ask for them
+
+                            if (permissionState.shouldShowRationale) {
+                                activity.showDialog(
+                                    title = "Partner Portal",
+                                    message = "Please go to settings and grant the required permissions to continue. If you wouldn't like to do this, you can close the app.",
+                                    positiveButtonText = "Go",
+                                    onPositiveClick = {
+                                        // go to the settings
+                                        activity.launchAppInfoSettings()
+                                    },
+                                    negativeButtonText = "Close App",
+                                    onNegativeClick = {
+                                        activity.finish()
+                                    }
+                                )
+                            } else {
+                                permissionState.launchMultiplePermissionRequest()
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(3.dp))

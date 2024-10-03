@@ -1,26 +1,20 @@
 package xyz.regulad.partnerportal.util
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.util.Log
-import android.view.View
-import android.view.WindowInsets
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.OnApplyWindowInsetsListener
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-  import kotlinx.coroutines.delay
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 @Composable
@@ -61,7 +55,8 @@ fun ImmersiveFullscreenContent(content: @Composable () -> Unit) {
     }
 
     DisposableEffect(Unit) {
-        windowInsetsControllerCompat.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsControllerCompat.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         hideUI()

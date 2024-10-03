@@ -5,7 +5,6 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Looper
 import xyz.regulad.partnerportal.R
-import java.lang.ref.WeakReference
 import java.util.*
 
 object ClickSoundManager {

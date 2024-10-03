@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
@@ -20,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import androidx.core.content.res.ResourcesCompat
 import xyz.regulad.partnerportal.R
 
 val minecraftFontId: Int = R.font.minecraftia
@@ -34,7 +30,7 @@ val minecraftFontFamily = FontFamily(
 
 @Composable
 fun TextStyleForFontSize(fontSize: TextUnit, textColor: Color = Color.White): TextStyle {
-    with (LocalDensity.current) {
+    with(LocalDensity.current) {
         val minecraftFontOffsetTextSize = fontSize / minecraftPixelHeight
         val minecraftFontOffset = Offset(minecraftFontOffsetTextSize.toPx(), minecraftFontOffsetTextSize.toPx())
 

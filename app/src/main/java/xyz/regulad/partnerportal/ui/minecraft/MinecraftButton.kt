@@ -8,7 +8,9 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -71,7 +73,12 @@ fun MinecraftButton(
                 .border(2.dp, buttonBorderColor)
                 .background(backgroundBrush)
                 // so dumb: shadow is factored into the inside and doesn't draw under padding
-                .padding(leftRightPadding, topBottomPadding, leftRightPadding- minecraftFontOffset.toDp(), topBottomPadding- minecraftFontOffset.toDp()),
+                .padding(
+                    leftRightPadding,
+                    topBottomPadding,
+                    leftRightPadding - minecraftFontOffset.toDp(),
+                    topBottomPadding - minecraftFontOffset.toDp()
+                ),
         ) {
             MinecraftText(
                 text = label,

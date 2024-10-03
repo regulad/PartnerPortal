@@ -7,7 +7,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import xyz.regulad.partnerportal.PartnerPortalViewModel
 import xyz.regulad.partnerportal.ui.minecraft.MinecraftBackgroundImage
 import xyz.regulad.partnerportal.ui.minecraft.MinecraftText

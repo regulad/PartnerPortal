@@ -2,23 +2,15 @@ package xyz.regulad.partnerportal.ui.minecraft
 
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
-import android.graphics.RuntimeShader
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.foundation.layout.size
+import android.graphics.Shader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
-import android.graphics.Shader
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ShaderBrush
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import kotlin.random.Random
-import org.intellij.lang.annotations.Language
 
 @Composable
 fun NoisyBrush(color: Color, temperature: Double = 0.1): Brush {

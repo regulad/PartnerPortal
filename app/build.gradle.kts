@@ -72,4 +72,6 @@ dependencies {
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("io.coil-kt:coil-gif:2.4.0")
+
+    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
 }
