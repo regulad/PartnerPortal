@@ -6,19 +6,27 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
-import xyz.regulad.partnerportal.navigation.MinecraftPortalLoadingPage
+import xyz.regulad.partnerportal.navigation.LoadingPage
+import xyz.regulad.partnerportal.navigation.StartupPage
 
 @Serializable
-data object MinecraftPortalLoadingRoute
+data object LoadingRoute
+
+@Serializable
+data object StartupRoute
 
 @Composable
 fun PartnerPortalNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController
 ) {
-    NavHost(navController = navController, startDestination = MinecraftPortalLoadingRoute, modifier = modifier) {
-        composable<MinecraftPortalLoadingRoute> {
-            MinecraftPortalLoadingPage()
+    NavHost(navController = navController, startDestination = StartupRoute, modifier = modifier) {
+        composable<StartupRoute> {
+            StartupPage()
+        }
+
+        composable<LoadingRoute> {
+            LoadingPage()
         }
     }
 }

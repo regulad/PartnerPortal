@@ -10,7 +10,7 @@ Create a Nether Portal between you and your partner using WebRTC video chat.
 
 Non-libre, but extremely permissive.
 
-### Minecraft Nether Portal Texture
+### Minecraft Textures
 
 [Mojang License](https://www.minecraft.net/en-us/usage-guidelines)
 
