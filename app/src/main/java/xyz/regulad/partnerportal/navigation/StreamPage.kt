@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.serialization.Serializable
+import org.webrtc.EglBase
 import org.webrtc.RendererCommon.RendererEvents
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
@@ -19,12 +20,10 @@ data object StreamRoute
 
 @Composable
 fun WebRTCVideoView(viewModel: PartnerPortalViewModel, videoTrack: VideoTrack, modifier: Modifier = Modifier) {
-    val eglBase = viewModel.eglBase
-
     AndroidView(
         factory = { context ->
             SurfaceViewRenderer(context).apply {
-                init(eglBase.eglBaseContext, object : RendererEvents {
+                init(viewModel.eglBase.eglBaseContext, object : RendererEvents {
                     override fun onFirstFrameRendered() {
                         Log.d("WebRTCVideoView", "First frame rendered")
                     }
@@ -45,7 +44,8 @@ fun WebRTCVideoView(viewModel: PartnerPortalViewModel, videoTrack: VideoTrack, m
         onRelease = { view ->
             videoTrack.removeSink(view)
             view.release()
-            eglBase.release()
+            viewModel.eglBase.release()
+            viewModel.eglBase = EglBase.create()!! // swap w/ fresh EglBase
         }
     )
 }

@@ -196,7 +196,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     }
 
     // WebRTC stuff
-    val eglBase: EglBase = EglBase.create()!!
+    var eglBase: EglBase = EglBase.create()!!
     private val videoEncoderFactory =
         HardwareVideoEncoderFactory(eglBase.eglBaseContext, true, true) // software broken on Android 7
     private val videoDecoderFactory =
@@ -255,7 +255,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         val surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
         val videoSource = peerConnectionFactory.createVideoSource(videoCapturer.isScreencast)
         videoCapturer.initialize(surfaceTextureHelper, this.getApplication(), videoSource.capturerObserver)
-        videoCapturer.startCapture(1280, 720, 30) // Adjust resolution and FPS as needed
+        videoCapturer.startCapture(1280, 720, 15) // TODO: dynamic
         return videoSource
     }
 
@@ -522,7 +522,16 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                 throw Exception("Camera error")
             }
 
-            // Set up video transceiver
+            val videoTransceiver = peerConnection.addTransceiver(
+                MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
+                RtpTransceiver.RtpTransceiverInit(
+                    RtpTransceiver.RtpTransceiverDirection.SEND_RECV,
+                    listOf("video_track"),
+                )
+            )
+            if (!videoTransceiver.sender.setTrack(attemptedVideoTrack, false)) {
+                throw Exception("Failed to set video track")
+            }
             val audioTransceiver = peerConnection.addTransceiver(
                 MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
                 RtpTransceiver.RtpTransceiverInit(
@@ -532,23 +541,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             )
             if (!audioTransceiver.sender.setTrack(attemptedAudioTrack, false)) {
                 throw Exception("Failed to set audio track")
-            }
-
-            val videoTransceiver = peerConnection.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
-                RtpTransceiver.RtpTransceiverInit(
-                    RtpTransceiver.RtpTransceiverDirection.SEND_RECV,
-                    listOf("video_track"),
-                    videoEncoderFactory?.let {
-                        it.supportedCodecs.map { codec ->
-                            RtpParameters.Encoding(codec.name, true, 1.0)
-                        }
-                    } ?: listOf(
-                        RtpParameters.Encoding("H264", true, 1.0), // failsafe default
-                    )
-                )
-            )
-            if (!videoTransceiver.sender.setTrack(attemptedVideoTrack, false)) {
-                throw Exception("Failed to set video track")
             }
 
             // all the prep work is now done. we can now do actual signaling
@@ -759,6 +751,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         super.onCleared()
         cancelConnection()
         eglBase.release()
+        eglBase = EglBase.create()!! // swap w/ fresh EglBase
         peerConnectionFactory.dispose()
         cleanupMedia()
     }
