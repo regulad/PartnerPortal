@@ -489,9 +489,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
                     override fun onRenegotiationNeeded() {
                         Log.d(TAG, "Renegotiation needed")
-                        if (connectionEstablished) {
-                            restartConnection()
-                        }
                     }
 
                     override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>) {
@@ -513,33 +510,13 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                 throw Exception("Failed to create peer connection")
             }
 
+            updateConnectingStatus("Starting camera...")
+
             // create transceivers
             // wait for camera to be ready
             val cameraStatus = cameraStatusChannel.receive()
             if (cameraStatus.second == CameraStatus.ERROR) {
                 throw Exception("Camera error")
-            }
-
-            val videoTransceiver = peerConnection.addTransceiver(
-                MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
-                RtpTransceiver.RtpTransceiverInit(
-                    RtpTransceiver.RtpTransceiverDirection.SEND_RECV,
-                    listOf("video_track"),
-                )
-            )
-            if (!videoTransceiver.sender.setTrack(attemptedVideoTrack, false)) {
-                throw Exception("Failed to set video track")
-            }
-
-            val audioTransceiver = peerConnection.addTransceiver(
-                MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
-                RtpTransceiver.RtpTransceiverInit(
-                    RtpTransceiver.RtpTransceiverDirection.SEND_RECV,
-                    listOf("audio_track")
-                )
-            )
-            if (!audioTransceiver.sender.setTrack(attemptedAudioTrack, false)) {
-                throw Exception("Failed to set audio track")
             }
 
             // all the prep work is now done. we can now do actual signaling
@@ -588,6 +565,29 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             val weAreTheInitiator = ourUserId < peerUserId
             if (weAreTheInitiator) {
                 updateConnectingStatus("Creating offer...")
+
+                // add transceivers
+                val videoTransceiver = peerConnection.addTransceiver(
+                    MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
+                    RtpTransceiver.RtpTransceiverInit(
+                        RtpTransceiver.RtpTransceiverDirection.SEND_RECV,
+                        listOf("video_track"),
+                    )
+                )
+                if (!videoTransceiver.sender.setTrack(attemptedVideoTrack, false)) {
+                    throw Exception("Failed to set video track")
+                }
+
+                val audioTransceiver = peerConnection.addTransceiver(
+                    MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
+                    RtpTransceiver.RtpTransceiverInit(
+                        RtpTransceiver.RtpTransceiverDirection.SEND_RECV,
+                        listOf("audio_track")
+                    )
+                )
+                if (!audioTransceiver.sender.setTrack(attemptedAudioTrack, false)) {
+                    throw Exception("Failed to set audio track")
+                }
 
                 val offerDescription = suspendCancellableCoroutine { completion ->
                     peerConnection.createOffer(object : SdpObserver {
@@ -648,6 +648,15 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                 peerConnection.setRemoteDescriptionAsync(offerDescription)
 
                 updateConnectingStatus("Sending answer...")
+
+                // write our transceivers
+                val videoTransceiver = peerConnection.transceivers[0]
+                videoTransceiver.direction = RtpTransceiver.RtpTransceiverDirection.SEND_RECV
+                videoTransceiver.sender.setTrack(attemptedVideoTrack, false)
+
+                val audioTransceiver = peerConnection.transceivers[1]
+                audioTransceiver.direction = RtpTransceiver.RtpTransceiverDirection.SEND_RECV
+                audioTransceiver.sender.setTrack(attemptedAudioTrack, false)
 
                 // has to happen after the offer is set
                 val answerDescription = suspendCancellableCoroutine { continuation ->
