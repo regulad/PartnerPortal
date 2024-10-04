@@ -32,7 +32,6 @@ import xyz.regulad.partnerportal.navigation.ErrorRoute
 import xyz.regulad.partnerportal.navigation.LoadingRoute
 import xyz.regulad.partnerportal.navigation.StartupRoute
 import xyz.regulad.partnerportal.navigation.StreamRoute
-import xyz.regulad.partnerportal.ui.minecraft.PortalSoundManager.doPortalSound
 import xyz.regulad.partnerportal.util.navigateOneWay
 import xyz.regulad.partnerportal.util.showToast
 import kotlin.coroutines.resume
@@ -371,7 +370,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     // webrtc peer connection
     private suspend fun doConnection() {
         val ourUserId = (Math.random() * Long.MAX_VALUE).toLong()
-        val peerUserId: Long?
 
         var iceCandidateJob: Job? = null
         var peerConnection: PeerConnection? = null
@@ -532,6 +530,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             if (!videoTransceiver.sender.setTrack(attemptedVideoTrack, false)) {
                 throw Exception("Failed to set video track")
             }
+
             val audioTransceiver = peerConnection.addTransceiver(
                 MediaStreamTrack.MediaType.MEDIA_TYPE_AUDIO,
                 RtpTransceiver.RtpTransceiverInit(
@@ -565,7 +564,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             }
             val advertisementStream = signalingChannel.broadcastFlow<AdvertisementPayload>("advertisement")
 
-            peerUserId = advertisementStream.collectFirst { incomingAdvertisement ->
+            val peerUserId = advertisementStream.collectFirst { incomingAdvertisement ->
                 Log.d(TAG, "Got advertisement from partner: $incomingAdvertisement")
                 incomingAdvertisement.userId != ourUserId
             }.userId
@@ -695,8 +694,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             answerSendingJob?.cancel()
 
             updateConnectingStatus(finishedConnectionValue)
-
-            getApplication<Application>().doPortalSound()
 
             handler.runSuspending {
                 navController.navigate(StreamRoute) {
