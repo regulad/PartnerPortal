@@ -7,6 +7,15 @@ import android.os.Looper
 import xyz.regulad.partnerportal.R
 import java.util.*
 
+fun Context.getIsSilent(): Boolean {
+    val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    return when (audioManager.ringerMode) {
+        AudioManager.RINGER_MODE_SILENT -> true
+        AudioManager.RINGER_MODE_VIBRATE -> true
+        else -> false
+    }
+}
+
 object ClickSoundManager {
     private val mediaPlayerWeakMap: MutableMap<Context, MediaPlayer> = Collections.synchronizedMap(WeakHashMap())
     private val looper = Looper.getMainLooper()
@@ -23,13 +32,22 @@ object ClickSoundManager {
             mediaPlayer.start()
         }
     }
+}
 
-    fun Context.getIsSilent(): Boolean {
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        return when (audioManager.ringerMode) {
-            AudioManager.RINGER_MODE_SILENT -> true
-            AudioManager.RINGER_MODE_VIBRATE -> true
-            else -> false
+object PortalSoundManager {
+    private val mediaPlayerWeakMap: MutableMap<Context, MediaPlayer> = Collections.synchronizedMap(WeakHashMap())
+    private val looper = Looper.getMainLooper()
+
+    fun Context.doPortalSound() = looper.run {
+        val mediaPlayer = mediaPlayerWeakMap.getOrPut(this@doPortalSound) {
+            MediaPlayer.create(this@doPortalSound, R.raw.portal).apply {
+                // don't release it because we constantly replay this
+                isLooping = false
+            }
+        }
+
+        if (!mediaPlayer.isPlaying && !getIsSilent()) {
+            mediaPlayer.start()
         }
     }
 }

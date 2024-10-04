@@ -79,7 +79,7 @@ dependencies {
     implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt:3.0.0")
-    implementation("io.ktor:ktor-client-android:3.0.0-rc-1")
+    implementation("io.ktor:ktor-client-okhttp:3.0.0-rc-1") // use okhttp and not android for websocket
 
     implementation("io.github.webrtc-sdk:android:125.6422.05") // the one you'll see in docs are no longer hosted
 }

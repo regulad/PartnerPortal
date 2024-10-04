@@ -10,7 +10,14 @@ to keep an Android addition at bay, so this weekend's project is another Android
 Partner Portal is an open-source and self-hostable 1-on-1 video chat app. It's designed to run 24/7, perfect for you and
 your domestic partner to leave in the corner of your college dorm room or apartment.
 
-To use
+To use, simply open the app on both phones and share the same room code. After pressing "Connect," the app will
+automatically handle everything else.
+
+## Self-hosting
+
+If you wouldn't like to use the public server, you can self-host the server.
+
+Create a project on Supabase Managed or Supabase self-hosted and insert the URL and Anon key.
 
 ## Licenses
 

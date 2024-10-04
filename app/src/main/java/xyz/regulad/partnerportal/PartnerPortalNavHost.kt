@@ -32,5 +32,9 @@ fun PartnerPortalNavHost(
                 navController = navHostController
             )
         }
+
+        composable<StreamRoute> {
+            StreamPage(viewModel = viewModel)
+        }
     }
 }

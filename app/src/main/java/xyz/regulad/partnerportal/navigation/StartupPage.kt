@@ -32,6 +32,10 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
 
     MinecraftBackgroundImage("dirt.png")
 
+    LaunchedEffect(Unit) {
+        viewModel.cancelConnection() // make sure we aren't straggling if we're coming back to this screen
+    }
+
     val permissionState =
         rememberMultiplePermissionsState(
             permissions = VIDEO_CALL_PERMISSIONS,
