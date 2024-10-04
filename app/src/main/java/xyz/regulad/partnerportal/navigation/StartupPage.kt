@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.serialization.Serializable
@@ -32,8 +33,14 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
 
     MinecraftBackgroundImage("dirt.png")
 
+    val intent = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+
     LaunchedEffect(Unit) {
-        viewModel.cancelConnection() // make sure we aren't straggling if we're coming back to this screen
+        if (viewModel.connectionJob != null) {
+            // we came back here from the StreamPage, so we should restart the activity to ensure that the connection behaves as expected
+            restartActivity(intent, lifecycleOwner)
+        }
     }
 
     val permissionState =

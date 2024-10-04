@@ -27,6 +27,7 @@ import org.webrtc.*
 import org.webrtc.CameraVideoCapturer.CameraEventsHandler
 import org.webrtc.PeerConnection.IceConnectionState
 import org.webrtc.PeerConnection.SdpSemantics
+import org.webrtc.audio.JavaAudioDeviceModule
 import xyz.regulad.blueheaven.util.sha1Hash
 import xyz.regulad.partnerportal.navigation.ErrorRoute
 import xyz.regulad.partnerportal.navigation.LoadingRoute
@@ -180,6 +181,10 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     private val _incomingVideoStream = MutableStateFlow<VideoTrack?>(null)
     val incomingVideoTrack: StateFlow<VideoTrack?> = _incomingVideoStream.asStateFlow()
 
+    // incoming audio stream state
+    private val _incomingAudioStream = MutableStateFlow<AudioTrack?>(null)
+    val incomingAudioTrack: StateFlow<AudioTrack?> = _incomingAudioStream.asStateFlow()
+
     private fun getSupabase(): SupabaseClient =
         createSupabaseClient(
             supabaseUrl = preferences.supabaseUrl,
@@ -311,10 +316,15 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         throw IllegalStateException("No suitable camera found")
     }
 
+    // don't delete this
+    val audioDeviceModule = JavaAudioDeviceModule.builder(this.getApplication())
+        .setUseHardwareAcousticEchoCanceler(true)
+        .setUseHardwareNoiseSuppressor(true)
+        .setUseLowLatency(true)
+        .createAudioDeviceModule()!!
+
     private var audioSource: AudioSource? = null
     private fun createAudioTrack(): AudioTrack? {
-        // TODO: ident a way to always use the frontMic if we can
-
         val constraints = MediaConstraints().apply {
             optional.add(MediaConstraints.KeyValuePair("echoCancellation", "true"))
             optional.add(MediaConstraints.KeyValuePair("noiseSuppression", "true"))
@@ -322,6 +332,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         }
 
         val audioSource = audioSource ?: peerConnectionFactory.createAudioSource(constraints).also { audioSource = it }
+
         return peerConnectionFactory.createAudioTrack("audio_track", audioSource)
     }
 
@@ -496,8 +507,14 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
                     override fun onTrack(p0: RtpTransceiver) {
                         Log.d(TAG, "Got track: ${p0.receiver.track()}")
-                        if (p0.receiver.track() is VideoTrack) {
-                            _incomingVideoStream.value = p0.receiver.track() as VideoTrack
+                        when (val track = p0.receiver.track()) {
+                            is VideoTrack -> {
+                                _incomingVideoStream.value = track
+                            }
+
+                            is AudioTrack -> {
+                                _incomingAudioStream.value = track
+                            }
                         }
                     }
 
@@ -725,7 +742,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    private var connectionJob: Job? = null
+    var connectionJob: Job? = null
 
     fun startConnection() {
         synchronized(this) {
@@ -757,7 +774,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         super.onCleared()
         cancelConnection()
         eglBase.release()
-        eglBase = EglBase.create()!! // swap w/ fresh EglBase
         peerConnectionFactory.dispose()
         cleanupMedia()
     }

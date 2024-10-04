@@ -1,25 +1,47 @@
 package xyz.regulad.partnerportal.navigation
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.serialization.Serializable
 import xyz.regulad.partnerportal.ui.minecraft.MinecraftBackgroundImage
 import xyz.regulad.partnerportal.ui.minecraft.MinecraftButton
 import xyz.regulad.partnerportal.ui.minecraft.MinecraftText
-import xyz.regulad.partnerportal.util.navigateOneWay
 
 @Serializable
 data class ErrorRoute(
     val errorMessage: String
 )
 
+fun restartActivity(context: Context, lifecycleOwner: LifecycleOwner) {
+    val intent = (context as? Activity)?.intent ?: return
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+
+    // Finish the current activity
+    (context as? Activity)?.finish()
+
+    // Start the new activity
+    context.startActivity(intent)
+
+    // Clear ViewModels
+    (lifecycleOwner as? ComponentActivity)?.viewModelStore?.clear()
+}
+
 @Composable
-fun ErrorPage(route: ErrorRoute, navController: NavController) {
+fun ErrorPage(route: ErrorRoute) {
     MinecraftBackgroundImage("dirt.png")
+
+    val intent = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -35,7 +57,8 @@ fun ErrorPage(route: ErrorRoute, navController: NavController) {
             Spacer(modifier = Modifier.height(10.dp))
 
             MinecraftButton("Try Again") {
-                navController.navigateOneWay(StartupRoute)
+                // kill the activity
+                restartActivity(intent, lifecycleOwner)
             }
         }
     }

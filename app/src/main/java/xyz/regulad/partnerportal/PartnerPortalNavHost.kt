@@ -28,8 +28,7 @@ fun PartnerPortalNavHost(
         composable<ErrorRoute> { navBackStackEntry ->
             val route: ErrorRoute = navBackStackEntry.toRoute()
             ErrorPage(
-                route = route,
-                navController = navHostController
+                route = route
             )
         }
 
