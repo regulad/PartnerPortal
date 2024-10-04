@@ -47,7 +47,7 @@ fun WebRTCVideoView(viewModel: PartnerPortalViewModel, videoTrack: VideoTrack, m
         onRelease = { view ->
             videoTrack.removeSink(view)
             view.release()
-            viewModel.eglBase.release()
+//            viewModel.eglBase.release() // we don't own the eglBase, so we can't release it
         }
     )
 }
