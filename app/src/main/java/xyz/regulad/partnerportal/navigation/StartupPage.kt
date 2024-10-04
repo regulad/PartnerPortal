@@ -7,15 +7,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import xyz.regulad.blueheaven.util.DialogManager.showDialog
+import kotlinx.serialization.Serializable
 import xyz.regulad.blueheaven.util.launchAppInfoSettings
-import xyz.regulad.partnerportal.LoadingRoute
 import xyz.regulad.partnerportal.MainActivity
 import xyz.regulad.partnerportal.PartnerPortalViewModel
 import xyz.regulad.partnerportal.ui.minecraft.*
+import xyz.regulad.partnerportal.util.DialogManager.showDialog
 import xyz.regulad.partnerportal.util.showToast
 
 val VIDEO_CALL_PERMISSIONS = listOf(
@@ -23,23 +22,22 @@ val VIDEO_CALL_PERMISSIONS = listOf(
     android.Manifest.permission.RECORD_AUDIO
 )
 
+@Serializable
+data object StartupRoute
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel, navController: NavController) {
+fun StartupPage(viewModel: PartnerPortalViewModel) {
     val activity = (LocalContext.current as? MainActivity)!!
 
     MinecraftBackgroundImage("dirt.png")
-
-    fun doConnect() {
-        navController.navigate(LoadingRoute)
-    }
 
     val permissionState =
         rememberMultiplePermissionsState(
             permissions = VIDEO_CALL_PERMISSIONS,
             onPermissionsResult = { permissions ->
                 if (permissions.all { it.value }) {
-                    doConnect()
+                    viewModel.startConnection()
                 }
             }
         )
@@ -48,7 +46,7 @@ fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel
     var supabaseAnonKey by remember { mutableStateOf(viewModel.preferences.supabaseAnonKey) }
     var roomCode by remember { mutableStateOf(viewModel.preferences.roomCode) }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Box(modifier = Modifier.align(Alignment.Center)) {
             Column {
                 HandledAsyncImage(
@@ -145,7 +143,7 @@ fun StartupPage(modifier: Modifier = Modifier, viewModel: PartnerPortalViewModel
                             }
 
                             if (permissionState.allPermissionsGranted) {
-                                doConnect()
+                                viewModel.startConnection()
                                 return@MinecraftButton
                             }
 

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "2.0.20"
 }
 
@@ -67,7 +68,7 @@ dependencies {
 
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
 
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
@@ -78,5 +79,7 @@ dependencies {
     implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:realtime-kt:3.0.0")
-    implementation("io.ktor:ktor-client-android:2.3.12")
+    implementation("io.ktor:ktor-client-android:3.0.0-rc-1")
+
+    implementation("io.github.webrtc-sdk:android:125.6422.05") // the one you'll see in docs are no longer hosted
 }

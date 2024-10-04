@@ -5,15 +5,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import kotlinx.serialization.Serializable
-import xyz.regulad.partnerportal.navigation.LoadingPage
-import xyz.regulad.partnerportal.navigation.StartupPage
-
-@Serializable
-data object LoadingRoute
-
-@Serializable
-data object StartupRoute
+import androidx.navigation.toRoute
+import xyz.regulad.partnerportal.navigation.*
 
 @Composable
 fun PartnerPortalNavHost(
@@ -24,13 +17,20 @@ fun PartnerPortalNavHost(
     NavHost(navController = navHostController, startDestination = StartupRoute, modifier = modifier) {
         composable<StartupRoute> {
             StartupPage(
-                navController = navHostController,
                 viewModel = viewModel
             )
         }
 
         composable<LoadingRoute> {
             LoadingPage(viewModel = viewModel)
+        }
+
+        composable<ErrorRoute> { navBackStackEntry ->
+            val route: ErrorRoute = navBackStackEntry.toRoute()
+            ErrorPage(
+                route = route,
+                navController = navHostController
+            )
         }
     }
 }

@@ -42,3 +42,7 @@ fun <K, V> MutableMap<K, V>.versionAgnosticPutIfAbsent(key: K, value: V): V? {
     }
 }
 
+fun ByteArray.sha1Hash(): ByteArray {
+    val digest = java.security.MessageDigest.getInstance("SHA-1")
+    return digest.digest(this)
+}

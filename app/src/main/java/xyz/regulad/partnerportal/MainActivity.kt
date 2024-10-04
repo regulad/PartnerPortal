@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
             KeepScreenOn()
 
             val navController = rememberNavController()
+            viewModel.navController = navController
 
             PartnerPortalTheme {
                 ImmersiveFullscreenContent {
@@ -39,5 +40,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        viewModel.cleanupMedia()
     }
 }

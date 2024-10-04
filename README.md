@@ -1,6 +1,16 @@
+#### 2024-2025 Weekend Project #2
+
+Hey, I'm Parker. I'm a high school student and I write apps in my free time. Currently, I've been trying (and failing)
+to keep an Android addition at bay, so this weekend's project is another Android app.
+
+[See Weekend Project #1, SupIR, here.](https://github.com/regulad/SupIR)
+
 # Partner Portal
 
-Create a Nether Portal between you and your partner using WebRTC video chat.
+Partner Portal is an open-source and self-hostable 1-on-1 video chat app. It's designed to run 24/7, perfect for you and
+your domestic partner to leave in the corner of your college dorm room or apartment.
+
+To use
 
 ## Licenses
 
