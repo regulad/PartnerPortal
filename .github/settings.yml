@@ -1,0 +1,71 @@
+repository:
+  # See https://developer.github.com/v3/repos/#edit for all available settings.
+
+  # The name of the repository. Changing this will rename the repository
+  name: PartnerPortal
+
+  # A short description of the repository that will show up on GitHub
+  description: "Partner Portal is an open-source, self-hostable 1-on-1 video chat Android app designed for 24/7 use. It features automatic reconnection, Supabase signaling, and a Minecraft-themed UI."
+
+  topics:
+    - android
+    - video-chat
+    - webrtc
+    - supabase
+    - open-source
+    - self-hosted
+    - kotlin
+    - minecraft-themed
+
+  # Either `true` to make the repository private, or `false` to make it public.
+  private: false
+
+  # Either `true` to enable issues for this repository, `false` to disable them.
+  has_issues: true
+
+  # Either `true` to enable the wiki for this repository, `false` to disable it.
+  has_wiki: true
+
+  # Either `true` to enable downloads for this repository, `false` to disable them.
+  has_downloads: true
+
+  # Updates the default branch for this repository.
+  default_branch: master
+
+  # Either `true` to allow squash-merging pull requests, or `false` to prevent
+  # squash-merging.
+  allow_squash_merge: true
+
+  # Either `true` to allow merging pull requests with a merge commit, or `false`
+  # to prevent merging pull requests with merge commits.
+  allow_merge_commit: true
+
+  # Either `true` to allow rebase-merging pull requests, or `false` to prevent
+  # rebase-merging.
+  allow_rebase_merge: true
+
+# Labels: define labels for Issues and Pull Requests
+labels:
+  - name: bug
+    color: CC0000
+  - name: feature
+    color: 336699
+  - name: first-timers-only
+    # include the old name to rename and existing label
+    oldname: Help Wanted
+
+# Collaborators: give specific users access to this repository.
+collaborators:
+  - username: bkeepers
+    # Note: Only valid on organization-owned repositories.
+    # The permission to grant the collaborator. Can be one of:
+    # * `pull` - can pull, but not push to or administer this repository.
+    # * `push` - can pull and push, but not administer this repository.
+    # * `admin` - can pull, push and administer this repository.
+    permission: push
+
+  - username: hubot
+    permission: pull
+
+  - username:
+    permission: pull
