@@ -7,12 +7,12 @@ to keep an Android addition at bay, so this weekend's project is another Android
 
 # ![Partner Portal](./app/src/main/assets/splash.png)
 
-TODO: Picture of system online
-
-TODO: Video demo of system
+![IRL Demo](./IMG_2739.jpg)
 
 > Get the 3D model for the stand [here](https://www.printables.com/model/1028254-motorola-g4-play-static-stand). I made
 > it too!
+
+![In-App Demo](./Screenshot_20241005-000919.png)
 
 Partner Portal is an open-source and self-hostable 1-on-1 video chat app. It's designed to run 24/7, perfect for you and
 your domestic partner to leave in the corner of your college dorm room or apartment.

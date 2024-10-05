@@ -29,11 +29,11 @@ fun restartActivity(context: Context, lifecycleOwner: LifecycleOwner) {
     // Finish the current activity
     (context as? Activity)?.finish()
 
-    // Start the new activity
-    context.startActivity(intent)
-
     // Clear ViewModels
     (lifecycleOwner as? ComponentActivity)?.viewModelStore?.clear()
+
+    // Start the activity again, after some delay
+    context.startActivity(intent)
 }
 
 @Composable

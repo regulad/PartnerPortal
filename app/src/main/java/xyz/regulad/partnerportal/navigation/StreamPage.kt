@@ -16,7 +16,6 @@ import org.webrtc.RendererCommon.RendererEvents
 import org.webrtc.SurfaceViewRenderer
 import org.webrtc.VideoTrack
 import xyz.regulad.partnerportal.PartnerPortalViewModel
-import xyz.regulad.partnerportal.ui.minecraft.MinecraftBackgroundImage
 
 @Serializable
 data object StreamRoute
@@ -73,6 +72,6 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
     if (videoTrack != null) {
         WebRTCVideoView(viewModel, videoTrack!!, modifier = Modifier.fillMaxSize())
     } else {
-        MinecraftBackgroundImage("portal.gif")
+        LoadingPage(viewModel)
     }
 }

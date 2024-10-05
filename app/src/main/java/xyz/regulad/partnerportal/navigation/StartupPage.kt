@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import xyz.regulad.blueheaven.util.launchAppInfoSettings
 import xyz.regulad.partnerportal.MainActivity
@@ -36,10 +38,15 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
     val intent = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         if (viewModel.connectionJob != null) {
             // we came back here from the StreamPage, so we should restart the activity to ensure that the connection behaves as expected
-            restartActivity(intent, lifecycleOwner)
+            coroutineScope.launch {
+                delay(200) // allow it to settle
+                restartActivity(intent, lifecycleOwner)
+            }
         }
     }
 

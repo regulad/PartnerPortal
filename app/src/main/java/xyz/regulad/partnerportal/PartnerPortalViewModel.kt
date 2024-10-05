@@ -38,7 +38,6 @@ import xyz.regulad.partnerportal.util.showToast
 import kotlin.coroutines.resume
 
 const val startingConnectionValue = "Connecting to partner..."
-const val finishedConnectionValue = "Connected to partner!"
 
 @OptIn(DelicateCoroutinesApi::class)
 suspend fun <T> Flow<T>.collectFirst(filter: suspend (T) -> Boolean): T {
@@ -276,14 +275,32 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             override fun onCameraError(p0: String?) {
                 Log.e(TAG, "Camera error: $p0")
                 cameraStatusChannel.trySend(capturer!! to CameraStatus.ERROR)
+
+                // cancel job if we're in the middle of a connection
+                connectionJob?.apply {
+                    showError(Exception("Camera error: $p0"))
+                    cancel()
+                }
             }
 
             override fun onCameraDisconnected() {
                 Log.e(TAG, "Camera disconnected")
+
+                // cancel job if we're in the middle of a connection
+                connectionJob?.apply {
+                    showError(Exception("Camera disconnected"))
+                    cancel()
+                }
             }
 
             override fun onCameraFreezed(p0: String?) {
                 Log.e(TAG, "Camera freezed: $p0")
+
+                // cancel job if we're in the middle of a connection
+                connectionJob?.apply {
+                    showError(Exception("Camera freezed: $p0"))
+                    cancel()
+                }
             }
 
             override fun onCameraOpening(p0: String?) {
@@ -449,7 +466,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
                             IceConnectionState.CLOSED -> {
                                 handler.post {
-                                    if (navController.currentBackStackEntry?.toRoute<StartupRoute>() != StartupRoute) {
+                                    if (navController.currentBackStackEntry?.toRoute<Any>() != StartupRoute) {
                                         showError(Exception("Connection closed"))
                                     } else {
                                         Log.d(TAG, "Connection closed after we stopped caring")
@@ -487,6 +504,15 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                     }
 
                     override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {
+                        for (candidate in p0 ?: emptyArray()) {
+                            Log.d(TAG, "Removed ice candidate: $candidate")
+                            viewModelScope.launch {
+                                signalingChannel.broadcast(
+                                    "ice_candidate_revoke",
+                                    IceCandidatePayload(ourUserId, candidate)
+                                )
+                            }
+                        }
                     }
 
                     override fun onAddStream(p0: MediaStream?) {
@@ -503,15 +529,18 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                     }
 
                     override fun onAddTrack(p0: RtpReceiver?, p1: Array<out MediaStream>) {
+                        // ignore this
                     }
 
                     override fun onTrack(p0: RtpTransceiver) {
                         Log.d(TAG, "Got track: ${p0.receiver.track()}")
                         when (val track = p0.receiver.track()) {
+                            null -> {
+                                Log.w(TAG, "Track is null")
+                            }
                             is VideoTrack -> {
                                 _incomingVideoStream.value = track
                             }
-
                             is AudioTrack -> {
                                 _incomingAudioStream.value = track
                             }
@@ -519,6 +548,21 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                     }
 
                     override fun onRemoveTrack(p0: RtpReceiver?) {
+                        Log.d(TAG, "Track removed")
+
+                        when (p0?.track()) {
+                            null -> {
+                                Log.w(TAG, "Track is null")
+                            }
+
+                            _incomingAudioStream.value -> {
+                                _incomingAudioStream.value = null
+                            }
+
+                            _incomingVideoStream.value -> {
+                                _incomingVideoStream.value = null
+                            }
+                        }
                     }
                 }
             )
@@ -566,13 +610,28 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             val offerStream = signalingChannel.broadcastFlow<OfferPayload>("offer")
 
             // do ICE candidate receiving
-            val iceCandidateStream = signalingChannel.broadcastFlow<IceCandidatePayload>("ice_candidate")
-            iceCandidateJob = viewModelScope.launch {
-                iceCandidateStream.collect { iceCandidatePayload ->
+            val iceCandidateAddStream = signalingChannel.broadcastFlow<IceCandidatePayload>("ice_candidate")
+            val iceCandidateAddJob = viewModelScope.launch {
+                iceCandidateAddStream.collect { iceCandidatePayload ->
                     if (iceCandidatePayload.sourceId == peerUserId) {
                         peerConnection.addIceCandidate(iceCandidatePayload.toIceCandidate())
                     }
                 }
+            }
+            val iceCandidateRevokeStream = signalingChannel.broadcastFlow<IceCandidatePayload>("ice_candidate_revoke")
+            val iceCandidateRevokeJob = viewModelScope.launch {
+                iceCandidateRevokeStream.collect { iceCandidatePayload ->
+                    if (iceCandidatePayload.sourceId == peerUserId) {
+                        peerConnection.removeIceCandidates(arrayOf(iceCandidatePayload.toIceCandidate()))
+                    }
+                }
+            }
+
+            iceCandidateJob = viewModelScope.launch {
+                joinAll(
+                    iceCandidateAddJob,
+                    iceCandidateRevokeJob
+                )
             }
 
             updateConnectingStatus("Waiting for partner...")
@@ -666,7 +725,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
                 updateConnectingStatus("Sending answer...")
 
-                // write our transceivers
+                // write our transceivers, if we do this before setting the remote description the direction will be clobbered
                 val videoTransceiver = peerConnection.transceivers[0]
                 videoTransceiver.direction = RtpTransceiver.RtpTransceiverDirection.SEND_RECV
                 videoTransceiver.sender.setTrack(attemptedVideoTrack, false)
@@ -719,7 +778,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
             }
             answerSendingJob?.cancel()
 
-            updateConnectingStatus(finishedConnectionValue)
+            updateConnectingStatus("Connected to partner!\nStarting video stream...")
 
             handler.runSuspending {
                 navController.navigate(StreamRoute) {
@@ -759,11 +818,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                 }
             }
         }
-    }
-
-    fun restartConnection() {
-        cancelConnection()
-        startConnection()
     }
 
     fun cancelConnection() {
