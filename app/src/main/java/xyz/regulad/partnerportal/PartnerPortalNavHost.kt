@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import xyz.regulad.partnerportal.navigation.*
+import xyz.regulad.partnerportal.ui.navigation.*
 
 @Composable
 fun PartnerPortalNavHost(
@@ -19,10 +19,6 @@ fun PartnerPortalNavHost(
             StartupPage(
                 viewModel = viewModel
             )
-        }
-
-        composable<LoadingRoute> {
-            LoadingPage(viewModel = viewModel)
         }
 
         composable<ErrorRoute> { navBackStackEntry ->

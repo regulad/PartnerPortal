@@ -1,4 +1,4 @@
-package xyz.regulad.partnerportal.navigation
+package xyz.regulad.partnerportal.ui.navigation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*

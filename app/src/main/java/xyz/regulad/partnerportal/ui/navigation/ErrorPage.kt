@@ -1,4 +1,4 @@
-package xyz.regulad.partnerportal.navigation
+package xyz.regulad.partnerportal.ui.navigation
 
 import android.app.Activity
 import android.content.Context

@@ -11,7 +11,6 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import androidx.navigation.toRoute
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -29,10 +28,9 @@ import org.webrtc.PeerConnection.IceConnectionState
 import org.webrtc.PeerConnection.SdpSemantics
 import org.webrtc.audio.JavaAudioDeviceModule
 import xyz.regulad.blueheaven.util.sha1Hash
-import xyz.regulad.partnerportal.navigation.ErrorRoute
-import xyz.regulad.partnerportal.navigation.LoadingRoute
-import xyz.regulad.partnerportal.navigation.StartupRoute
-import xyz.regulad.partnerportal.navigation.StreamRoute
+import xyz.regulad.partnerportal.ui.navigation.ErrorRoute
+import xyz.regulad.partnerportal.ui.navigation.StartupRoute
+import xyz.regulad.partnerportal.ui.navigation.StreamRoute
 import xyz.regulad.partnerportal.util.navigateOneWay
 import xyz.regulad.partnerportal.util.showToast
 import kotlin.coroutines.resume
@@ -68,7 +66,7 @@ suspend fun <T> Flow<T>.collectFirst(filter: suspend (T) -> Boolean): T {
 }
 
 suspend fun PeerConnection.setLocalDescriptionAsync(description: SessionDescription) {
-    suspendCancellableCoroutine<Unit> { continuation ->
+    suspendCancellableCoroutine { continuation ->
         setLocalDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
             }
@@ -88,7 +86,7 @@ suspend fun PeerConnection.setLocalDescriptionAsync(description: SessionDescript
 }
 
 suspend fun PeerConnection.setRemoteDescriptionAsync(description: SessionDescription) {
-    suspendCancellableCoroutine<Unit> { continuation ->
+    suspendCancellableCoroutine { continuation ->
         setRemoteDescription(object : SdpObserver {
             override fun onCreateSuccess(p0: SessionDescription?) {
             }
@@ -162,6 +160,10 @@ data class IceCandidatePayload(
 class PartnerPortalViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         const val TAG = "PartnerPortalViewModel"
+
+        const val OUTGOING_VIDEO_WIDTH = 1280
+        const val OUTGOING_VIDEO_HEIGHT = 720
+        const val OUTGOING_VIDEO_FPS = 15
     }
 
     val preferences = UserPreferencesRepository(application)
@@ -177,12 +179,12 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     }
 
     // incoming video stream state
-    private val _incomingVideoStream = MutableStateFlow<VideoTrack?>(null)
-    val incomingVideoTrack: StateFlow<VideoTrack?> = _incomingVideoStream.asStateFlow()
+    private val _incomingVideoTrack = MutableStateFlow<VideoTrack?>(null)
+    val incomingVideoTrack: StateFlow<VideoTrack?> = _incomingVideoTrack.asStateFlow()
 
     // incoming audio stream state
-    private val _incomingAudioStream = MutableStateFlow<AudioTrack?>(null)
-    val incomingAudioTrack: StateFlow<AudioTrack?> = _incomingAudioStream.asStateFlow()
+    private val _incomingAudioTrack = MutableStateFlow<AudioTrack?>(null)
+    val incomingAudioTrack: StateFlow<AudioTrack?> = _incomingAudioTrack.asStateFlow()
 
     private fun getSupabase(): SupabaseClient =
         createSupabaseClient(
@@ -195,15 +197,41 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
     private fun showError(exception: java.lang.Exception) {
         exception.printStackTrace()
-        navController.navigateOneWay(ErrorRoute(exception.message ?: "Unknown error"))
+
+        // are we already on the error screen?
+
+        // route -> class name
+        if (navController.currentDestination?.route?.endsWith("StartupRoute") == true && navController.currentDestination?.route?.endsWith(
+                "ErrorRoute"
+            ) == false
+        ) {
+            try {
+                navController.navigateOneWay(ErrorRoute(exception.message ?: "Unknown error"))
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to navigate to error screen", e)
+                // ignore
+            }
+        }
     }
 
     // WebRTC stuff
     var eglBase: EglBase = EglBase.create()!!
-    private val videoEncoderFactory =
-        HardwareVideoEncoderFactory(eglBase.eglBaseContext, true, true) // software broken on Android 7
-    private val videoDecoderFactory =
-        HardwareVideoDecoderFactory(eglBase.eglBaseContext) // software broken on Android 7
+    private val videoEncoderFactory = let {
+        try {
+            DefaultVideoEncoderFactory(eglBase.eglBaseContext, true, true)
+        } catch (e: UnsatisfiedLinkError) {
+            Log.e(TAG, "Failed to create hardware/software encoder factory", e)
+            HardwareVideoEncoderFactory(eglBase.eglBaseContext, true, true) // software broken on Android 7
+        }
+    }
+    private val videoDecoderFactory = let {
+        try {
+            DefaultVideoDecoderFactory(eglBase.eglBaseContext)
+        } catch (e: UnsatisfiedLinkError) {
+            Log.e(TAG, "Failed to create hardware/software decoder factory", e)
+            HardwareVideoDecoderFactory(eglBase.eglBaseContext) // software broken on Android 7
+        }
+    }
     private val peerConnectionFactory = let {
         val options = PeerConnectionFactory.InitializationOptions.builder(this.getApplication())
             .setEnableInternalTracer(true)
@@ -258,7 +286,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         val surfaceTextureHelper = SurfaceTextureHelper.create("CaptureThread", eglBase.eglBaseContext)
         val videoSource = peerConnectionFactory.createVideoSource(videoCapturer.isScreencast)
         videoCapturer.initialize(surfaceTextureHelper, this.getApplication(), videoSource.capturerObserver)
-        videoCapturer.startCapture(1280, 720, 15) // TODO: dynamic
+        videoCapturer.startCapture(OUTGOING_VIDEO_WIDTH, OUTGOING_VIDEO_HEIGHT, OUTGOING_VIDEO_FPS)
         return videoSource
     }
 
@@ -354,39 +382,54 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     }
 
     // local streams
-    private var audioTrack: AudioTrack? = null
-    private var videoTrack: VideoTrack? = null
+    private val _outgoingVideoTrack = MutableStateFlow<VideoTrack?>(null)
+    val outgoingVideoTrack: StateFlow<VideoTrack?> = _outgoingVideoTrack.asStateFlow()
+
+    private val _outgoingAudioTrack = MutableStateFlow<AudioTrack?>(null)
+    val outgoingAudioTrack: StateFlow<AudioTrack?> = _outgoingAudioTrack.asStateFlow()
 
     // media handling
     fun cleanupMedia() {
+        val videoTrack = outgoingVideoTrack.value
         try {
             videoTrack?.dispose()
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to dispose video track", e)
             // ignore
+        } finally {
+            _outgoingVideoTrack.value = null
         }
-        videoTrack = null
+
         try {
             videoSource?.dispose()
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to dispose video source", e)
             // ignore
         }
         videoSource = null
+
         try {
             videoCapturer?.dispose()
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to dispose video capturer", e)
             // ignore
         }
         videoCapturer = null
 
+        val audioTrack = outgoingAudioTrack.value
         try {
             audioTrack?.dispose()
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to dispose audio track", e)
             // ignore
+        } finally {
+            _outgoingAudioTrack.value = null
         }
-        audioTrack = null
+
         try {
             audioSource?.dispose()
         } catch (e: Exception) {
+            Log.e(TAG, "Failed to dispose audio source", e)
             // ignore
         }
         audioSource = null
@@ -405,7 +448,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         try {
             updateConnectingStatus(startingConnectionValue)
             handler.runSuspending {
-                navController.navigate(LoadingRoute) {
+                navController.navigate(StreamRoute) {
                     popUpTo(StartupRoute)
                     launchSingleTop = true
                 }
@@ -427,10 +470,12 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
             updateConnectingStatus("Initializing audio & video...")
 
-            val attemptedVideoTrack = videoTrack ?: createVideoTrack().also { videoTrack = it }
-            val attemptedAudioTrack = audioTrack ?: createAudioTrack().also { audioTrack = it }
+            val maybeOutgoingVideoTrack =
+                outgoingVideoTrack.value ?: createVideoTrack().also { _outgoingVideoTrack.value = it }
+            val maybeOutgoingAudioTrack =
+                outgoingAudioTrack.value ?: createAudioTrack().also { _outgoingAudioTrack.value = it }
 
-            if (attemptedAudioTrack == null) {
+            if (maybeOutgoingAudioTrack == null) {
                 Log.w(TAG, "Failed to create audio track")
                 getApplication<Application>().showToast("Couldn't start the microphone. Continuing without audio...")
             }
@@ -457,21 +502,17 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                                 }
                             }
 
-                            IceConnectionState.DISCONNECTED -> {
+                            IceConnectionState.CLOSED -> {
                                 handler.post {
-                                    showError(Exception("Connection lost"))
+                                    showError(Exception("Connection closed"))
                                     cancelConnection()
                                 }
                             }
 
-                            IceConnectionState.CLOSED -> {
+                            IceConnectionState.DISCONNECTED -> {
                                 handler.post {
-                                    if (navController.currentBackStackEntry?.toRoute<Any>() != StartupRoute) {
-                                        showError(Exception("Connection closed"))
-                                    } else {
-                                        Log.d(TAG, "Connection closed after we stopped caring")
-                                    }
-                                    cancelConnection()
+                                    showError(Exception("Connection lost"))
+                                    cancelConnection(CancellationException("Connection lost"))
                                 }
                             }
 
@@ -483,6 +524,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                             }
 
                             else -> {
+                                // we don't handle CONNECTION_CLOSED because that can only be caused by us
                             }
                         }
                     }
@@ -539,10 +581,10 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                                 Log.w(TAG, "Track is null")
                             }
                             is VideoTrack -> {
-                                _incomingVideoStream.value = track
+                                _incomingVideoTrack.value = track
                             }
                             is AudioTrack -> {
-                                _incomingAudioStream.value = track
+                                _incomingAudioTrack.value = track
                             }
                         }
                     }
@@ -555,12 +597,12 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                                 Log.w(TAG, "Track is null")
                             }
 
-                            _incomingAudioStream.value -> {
-                                _incomingAudioStream.value = null
+                            _incomingAudioTrack.value -> {
+                                _incomingAudioTrack.value = null
                             }
 
-                            _incomingVideoStream.value -> {
-                                _incomingVideoStream.value = null
+                            _incomingVideoTrack.value -> {
+                                _incomingVideoTrack.value = null
                             }
                         }
                     }
@@ -650,7 +692,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                         listOf("video_track"),
                     )
                 )
-                if (!videoTransceiver.sender.setTrack(attemptedVideoTrack, false)) {
+                if (!videoTransceiver.sender.setTrack(maybeOutgoingVideoTrack, false)) {
                     throw Exception("Failed to set video track")
                 }
 
@@ -661,7 +703,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                         listOf("audio_track")
                     )
                 )
-                if (!audioTransceiver.sender.setTrack(attemptedAudioTrack, false)) {
+                if (!audioTransceiver.sender.setTrack(maybeOutgoingAudioTrack, false)) {
                     throw Exception("Failed to set audio track")
                 }
 
@@ -728,11 +770,11 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                 // write our transceivers, if we do this before setting the remote description the direction will be clobbered
                 val videoTransceiver = peerConnection.transceivers[0]
                 videoTransceiver.direction = RtpTransceiver.RtpTransceiverDirection.SEND_RECV
-                videoTransceiver.sender.setTrack(attemptedVideoTrack, false)
+                videoTransceiver.sender.setTrack(maybeOutgoingVideoTrack, false)
 
                 val audioTransceiver = peerConnection.transceivers[1]
                 audioTransceiver.direction = RtpTransceiver.RtpTransceiverDirection.SEND_RECV
-                audioTransceiver.sender.setTrack(attemptedAudioTrack, false)
+                audioTransceiver.sender.setTrack(maybeOutgoingAudioTrack, false)
 
                 // has to happen after the offer is set
                 val answerDescription = suspendCancellableCoroutine { continuation ->
@@ -780,13 +822,6 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
             updateConnectingStatus("Connected to partner!\nStarting video stream...")
 
-            handler.runSuspending {
-                navController.navigate(StreamRoute) {
-                    popUpTo(StartupRoute)
-                    launchSingleTop = true
-                }
-            }
-
             awaitCancellation()
         } catch (e: Exception) {
             if (e !is CancellationException) {
@@ -795,9 +830,24 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                 }
             }
         } finally {
-            cleanupMedia()
-            peerConnection?.dispose()
-            iceCandidateJob?.cancel()
+            try {
+                cleanupMedia()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to clean up media", e)
+                // ignore
+            }
+            try {
+                peerConnection?.dispose()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to dispose peer connection", e)
+                // ignore
+            }
+            try {
+                iceCandidateJob?.cancel()
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to cancel ice candidate job", e)
+                // ignore
+            }
         }
     }
 
@@ -820,15 +870,39 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
-    fun cancelConnection() {
-        connectionJob?.cancel()
+    fun cancelConnection(cause: CancellationException? = null) {
+        connectionJob?.cancel(cause)
     }
 
     override fun onCleared() {
         super.onCleared()
-        cancelConnection()
-        eglBase.release()
-        peerConnectionFactory.dispose()
-        cleanupMedia()
+
+        try {
+            cancelConnection(CancellationException("ViewModel cleared"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to cancel connection", e)
+            // ignore
+        }
+
+        try {
+            eglBase.release()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to release eglBase", e)
+            // ignore
+        }
+
+        try {
+            peerConnectionFactory.dispose()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to dispose peer connection factory", e)
+            // ignore
+        }
+
+        try {
+            cleanupMedia()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to clean up media", e)
+            // ignore
+        }
     }
 }
