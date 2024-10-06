@@ -3,11 +3,11 @@
   <component name="deploymentTargetSelector">
     <selectionStates>
       <SelectionState runConfigName="app">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2024-10-05T04:03:31.629559500Z">
+        <option name="selectionMode" value="DIALOG" />
+        <DropdownSelection timestamp="2024-10-05T23:41:57.367463300Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\parke\.android\avd\Pixel_Fold_API_35.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZY224353VN" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,12 +15,12 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="PhysicalDevice" identifier="serial=ZY2244QQJ6" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=ZY224353VN" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="Default" identifier="serial=192.168.0.115:5555;connection=ea249897" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=ZY2244QQJ6" />
               </handle>
             </Target>
           </targets>

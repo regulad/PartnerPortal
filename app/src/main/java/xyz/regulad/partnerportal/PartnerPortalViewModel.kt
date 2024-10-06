@@ -198,13 +198,10 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     private fun showError(exception: java.lang.Exception) {
         exception.printStackTrace()
 
-        // are we already on the error screen?
+        // only show the error if we are currently on the streampage
 
         // route -> class name
-        if (navController.currentDestination?.route?.endsWith("StartupRoute") == true && navController.currentDestination?.route?.endsWith(
-                "ErrorRoute"
-            ) == false
-        ) {
+        if (navController.currentDestination?.route?.endsWith("StreamRoute") == true) {
             try {
                 navController.navigateOneWay(ErrorRoute(exception.message ?: "Unknown error"))
             } catch (e: Exception) {
@@ -440,6 +437,12 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
     // webrtc peer connection
     private suspend fun doConnection() {
+        val thisJob = viewModelScope.coroutineContext[Job]!!
+        if (connectionJob != thisJob) {
+            connectionJob = thisJob
+            Log.w(TAG, "Connection job changed! Possible mismatch?")
+        }
+
         val ourUserId = (Math.random() * Long.MAX_VALUE).toLong()
 
         var iceCandidateJob: Job? = null
@@ -546,12 +549,12 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                     }
 
                     override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {
-                        for (candidate in p0 ?: emptyArray()) {
-                            Log.d(TAG, "Removed ice candidate: $candidate")
+                        Log.d(TAG, "Removed ice candidates: $p0")
+                        if (p0 != null) {
                             viewModelScope.launch {
                                 signalingChannel.broadcast(
                                     "ice_candidate_revoke",
-                                    IceCandidatePayload(ourUserId, candidate)
+                                    p0.map { IceCandidatePayload(ourUserId, it) }.toTypedArray()
                                 )
                             }
                         }
@@ -660,11 +663,13 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
                     }
                 }
             }
-            val iceCandidateRevokeStream = signalingChannel.broadcastFlow<IceCandidatePayload>("ice_candidate_revoke")
+            val iceCandidateRevokeStream =
+                signalingChannel.broadcastFlow<Array<IceCandidatePayload>>("ice_candidate_revoke")
             val iceCandidateRevokeJob = viewModelScope.launch {
                 iceCandidateRevokeStream.collect { iceCandidatePayload ->
-                    if (iceCandidatePayload.sourceId == peerUserId) {
-                        peerConnection.removeIceCandidates(arrayOf(iceCandidatePayload.toIceCandidate()))
+                    if (iceCandidatePayload.any { it.sourceId == peerUserId }) {
+                        peerConnection.removeIceCandidates(iceCandidatePayload.map { it.toIceCandidate() }
+                            .toTypedArray())
                     }
                 }
             }
@@ -824,10 +829,8 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
 
             awaitCancellation()
         } catch (e: Exception) {
-            if (e !is CancellationException) {
-                handler.runSuspending {
-                    showError(e)
-                }
+            handler.runSuspending {
+                showError(e)
             }
         } finally {
             try {
@@ -871,6 +874,7 @@ class PartnerPortalViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun cancelConnection(cause: CancellationException? = null) {
+        Log.d(TAG, "Cancelling $connectionJob: $cause")
         connectionJob?.cancel(cause)
     }
 
