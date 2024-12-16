@@ -27,12 +27,10 @@ import org.webrtc.CameraVideoCapturer.CameraEventsHandler
 import org.webrtc.PeerConnection.IceConnectionState
 import org.webrtc.PeerConnection.SdpSemantics
 import org.webrtc.audio.JavaAudioDeviceModule
-import xyz.regulad.blueheaven.util.sha1Hash
 import xyz.regulad.partnerportal.ui.navigation.ErrorRoute
 import xyz.regulad.partnerportal.ui.navigation.StartupRoute
 import xyz.regulad.partnerportal.ui.navigation.StreamRoute
-import xyz.regulad.partnerportal.util.navigateOneWay
-import xyz.regulad.partnerportal.util.showToast
+import xyz.regulad.regulib.showToast
 import kotlin.coroutines.resume
 
 const val startingConnectionValue = "Connecting to partner..."

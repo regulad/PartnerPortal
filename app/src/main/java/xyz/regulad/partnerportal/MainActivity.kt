@@ -11,8 +11,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import xyz.regulad.partnerportal.ui.theme.PartnerPortalTheme
-import xyz.regulad.partnerportal.util.ImmersiveFullscreenContent
-import xyz.regulad.partnerportal.util.KeepScreenOn
+import xyz.regulad.regulib.compose.ImmersiveFullscreenContent
+import xyz.regulad.regulib.compose.KeepScreenOn
 
 class MainActivity : ComponentActivity() {
     private val viewModel: PartnerPortalViewModel by viewModels()
@@ -25,18 +25,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             KeepScreenOn()
+            ImmersiveFullscreenContent()
 
             val navController = rememberNavController()
             viewModel.navController = navController
 
             PartnerPortalTheme {
-                ImmersiveFullscreenContent {
-                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // we don't use the padding here
-                        PartnerPortalNavHost(
-                            navHostController = navController,
-                            viewModel = viewModel
-                        )
-                    }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding -> // we don't use the padding here
+                    PartnerPortalNavHost(
+                        navHostController = navController,
+                        viewModel = viewModel
+                    )
                 }
             }
         }

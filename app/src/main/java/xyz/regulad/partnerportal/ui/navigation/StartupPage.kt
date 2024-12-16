@@ -1,5 +1,6 @@
 package xyz.regulad.partnerportal.ui.navigation
 
+import android.widget.Toast.LENGTH_SHORT
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,14 +12,15 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-import xyz.regulad.blueheaven.util.launchAppInfoSettings
+import xyz.regulad.partnerportal.DialogManager.showDialog
 import xyz.regulad.partnerportal.MainActivity
 import xyz.regulad.partnerportal.PartnerPortalViewModel
 import xyz.regulad.partnerportal.ui.minecraft.*
-import xyz.regulad.partnerportal.util.DialogManager.showDialog
-import xyz.regulad.partnerportal.util.showToast
+import xyz.regulad.regulib.launchAppInfoSettings
+import xyz.regulad.regulib.showToast
 
 val VIDEO_CALL_PERMISSIONS = listOf(
     android.Manifest.permission.CAMERA,
@@ -60,6 +62,30 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
             }
         )
 
+    var autoReconnect by remember { mutableStateOf(viewModel.preferences.autoReconnect) }
+
+    LaunchedEffect(autoReconnect) {
+        var timeLeft = 10
+        while (autoReconnect && timeLeft >= 0 && isActive) {
+            when (timeLeft) {
+                // length short is between 2 and 3 seconds
+                10, 7, 4, 1 -> activity.showToast("Auto reconnecting in $timeLeft seconds...", LENGTH_SHORT)
+                0 -> {
+                    if (permissionState.allPermissionsGranted && viewModel.preferences.supabaseUrl.isNotEmpty() && viewModel.preferences.supabaseAnonKey.isNotEmpty() && viewModel.preferences.roomCode.isNotEmpty()) {
+                        activity.showToast("Auto reconnecting now...")
+                        viewModel.startConnection()
+                    } else {
+                        activity.showToast("Cannot auto-reconnect without permissions.")
+                    }
+                    break
+                }
+            }
+
+            delay(1000)
+            timeLeft--
+        }
+    }
+
     var supabaseUrl by remember { mutableStateOf(viewModel.preferences.supabaseUrl) }
     var supabaseAnonKey by remember { mutableStateOf(viewModel.preferences.supabaseAnonKey) }
     var roomCode by remember { mutableStateOf(viewModel.preferences.roomCode) }
@@ -78,7 +104,7 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceBetween, // cannot add spacing between
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
@@ -139,7 +165,9 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
                         )
                     }
 
-                    Column {
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         MinecraftButton("Connect") {
                             viewModel.preferences.supabaseUrl = supabaseUrl
                             viewModel.preferences.supabaseAnonKey = supabaseAnonKey
@@ -186,12 +214,15 @@ fun StartupPage(viewModel: PartnerPortalViewModel) {
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(3.dp))
-
                         MinecraftText(
                             "Settings will be saved when\na connection is attempted.",
                             fontSize = 10.sp
                         )
+
+                        MinecraftButton("Auto Reconnect: ${if (autoReconnect) "ON" else "OFF"}") {
+                            autoReconnect = !autoReconnect
+                            viewModel.preferences.autoReconnect = autoReconnect
+                        }
                     }
                 }
             }

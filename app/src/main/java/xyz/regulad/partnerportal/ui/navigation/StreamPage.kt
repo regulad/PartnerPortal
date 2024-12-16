@@ -67,10 +67,11 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
     val incomingVideoTrack by viewModel.incomingVideoTrack.collectAsState()
     val incomingAudioTrack by viewModel.incomingAudioTrack.collectAsState()
 
-    var muteDesired by remember { mutableStateOf(false) }
-    var deafenDesired by remember { mutableStateOf(false) }
-    var cameraDesired by remember { mutableStateOf(true) }
-    var displayDesired by remember { mutableStateOf(true) }
+    var muteDesired by remember { mutableStateOf(viewModel.preferences.muteDesired) }
+    var deafenDesired by remember { mutableStateOf(viewModel.preferences.deafenDesired) }
+
+    var cameraDesired by remember { mutableStateOf(viewModel.preferences.cameraDesired) }
+    var displayDesired by remember { mutableStateOf(viewModel.preferences.displayDesired) }
 
     LaunchedEffect(outgoingAudioTrack, muteDesired) {
         outgoingAudioTrack?.setEnabled(!muteDesired)
@@ -118,6 +119,22 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
             LoadingPage(viewModel = viewModel)
         } else {
             WebRTCVideoView(viewModel, incomingVideoTrack!!, Modifier.fillMaxSize())
+
+            if (!displayDesired) {
+                // lets display a box with the camera off icon
+                Surface(
+                    color = Color.Black.copy(alpha = 0.5f),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.VideocamOff,
+                        contentDescription = "Display is currently disabled",
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(96.dp)
+                    )
+                }
+            }
         }
 
         // column in bottom left corner with controls/feedback
@@ -130,6 +147,7 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
                 Surface(
                     onClick = {
                         muteDesired = !muteDesired
+                        viewModel.preferences.muteDesired = muteDesired
                     },
                     color = Color.Transparent
                 ) {
@@ -152,6 +170,7 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
                 Surface(
                     onClick = {
                         deafenDesired = !deafenDesired
+                        viewModel.preferences.deafenDesired = deafenDesired
                     },
                     color = Color.Transparent
                 ) {
@@ -174,6 +193,7 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
                 Surface(
                     onClick = {
                         cameraDesired = !cameraDesired
+                        viewModel.preferences.cameraDesired = cameraDesired
                     },
                     color = Color.Transparent
                 ) {
@@ -196,6 +216,7 @@ fun StreamPage(viewModel: PartnerPortalViewModel) {
                 Surface(
                     onClick = {
                         displayDesired = !displayDesired
+                        viewModel.preferences.displayDesired = displayDesired
                     },
                     color = Color.Transparent
                 ) {

@@ -67,15 +67,18 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.material.icons.extended)
 
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.androidx.security.crypto)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+    implementation(libs.kotlinx.serialization.json)
 
-    implementation("io.coil-kt:coil:2.4.0")
-    implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation("io.coil-kt:coil-gif:2.4.0")
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
 
-    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+    implementation(libs.accompanist.permissions)
+
+    implementation(libs.regulib.common)
+    implementation(libs.regulib.compose)
 
     implementation(platform("io.github.jan-tennert.supabase:bom:3.0.0"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
