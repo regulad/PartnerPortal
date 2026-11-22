@@ -6,7 +6,8 @@ _extends: .github
 repository:
   name: PartnerPortal
   description: >-
-    Partner Portal is an open-source, self-hostable 1-on-1 video chat Android app designed for 24/7 use. It features automatic reconnection, Supabase signaling, and a Minecraft-themed UI.
+    Self-hostable 1-on-1 video chat Android app for 24/7 use, with Supabase
+    signaling
   homepage: ""
   private: false
   # Topics: comma-and-space separated string, NOT a YAML list.
